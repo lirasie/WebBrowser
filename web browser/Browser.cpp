@@ -222,6 +222,7 @@ int DrawHtml(HDC hDC, RECT* baseRect) {
 
 	DrawParagraph(hDC, baseRect, baseFont, tags, -1);
 
+
 	return 0;
 }
 
@@ -243,122 +244,68 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT hFont, Tag* tags, int tagType) {
 	ImgTag imgTag;
 	Rect imageRect;
 	Image* img;
-	HFONT h1Font = CreateFont(DEFAULT_FONT_SIZE*2, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+	HFONT h1Font = CreateFont(DEFAULT_FONT_SIZE * 2, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
 		DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, NULL);
 	int textHeight = 0;
 	SelectObject(hDC, hFont);
-	switch (tagType) {
-	case 0:
-		// <p>
-		while (true) {
-			if (wcscmp(tags[index].GetTagName().c_str(), L"h1") == 0) {
-				SelectObject(hDC, hFont);
-				textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-				(*rect).top += textHeight + 5;
-				printString = L"";
-				//h1에 대한 DrawParagraph
-				index += DrawParagraph(hDC, rect, hFont, &tags[index], 1);
-			}
-			else if (wcscmp(tags[index].GetTagName().c_str(), L"img") == 0) {
-				textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-				(*rect).top += textHeight + 1;
-				printString = L"";
-				//img tag
-				index += DrawParagraph(hDC, rect, hFont, &tags[index], 10);
-			}
-			else if (wcscmp(tags[index].GetTagName().c_str(), L"/p") == 0) {
-				break;
-			}
 
-			printString.append(tags[index].GetParagraph());
-
-			index++;
-		}
-		SelectObject(hDC, hFont);
-		textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-		(*rect).top += textHeight + 5;
-		break;
-	case 1:
-		// <h1>
-		SelectObject(hDC, h1Font);
-		while (true) {
-			if (wcscmp(tags[index].GetTagName().c_str(), L"p") == 0) {
-				SelectObject(hDC, h1Font);
-				textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-				(*rect).top += textHeight + 5;
-				printString = L"";
-				//p에 대한 DrawParagraph
-				index += DrawParagraph(hDC, rect, hFont, &(tags[index]), 0);
-			}
-			else if (wcscmp(tags[index].GetTagName().c_str(), L"img") == 0) {
-				textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-				(*rect).top += textHeight + 1;
-				printString = L"";
-				//img tag
-				index += DrawParagraph(hDC, rect, hFont, &tags[index], 10);
-			}
-			else if (wcscmp(tags[index].GetTagName().c_str(), L"/h1") == 0) {
-				break;
-			}
+	// <body>
+	while (true) {
+		if (index == 0) {
 			printString.append(tags[index].GetParagraph());
 			index++;
+			continue;
 		}
-		SelectObject(hDC, h1Font);
-		textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-		(*rect).top += textHeight + 5;
-		break;
-	case 10:
-		//<img>
-		imgTag = ImgTag();
-		imgTag.ParseAttribute(tags[index].GetAttribute());
-		img = new Image(imgTag.GetSrc().c_str(), FALSE);
-		
-		imageRect = Rect((*rect).left, (*rect).top, (*img).GetWidth(), (*img).GetHeight());
-		graphics.DrawImage(img, imageRect);
-		(*rect).top += (*img).GetHeight() + 1;
-		delete img;
-		
-		break;
+		else if (wcscmp(tags[index].GetTagName().c_str(), L"p") == 0) {
+			SelectObject(hDC, hFont);
+			textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
+			(*rect).top += textHeight + 5;
+			printString = L"";
+			//p에 대한 DrawParagraph
+			index += DrawParagraph(hDC, rect, hFont, &(tags[index]), 0);
+		}
+		else if (wcscmp(tags[index].GetTagName().c_str(), L"h1") == 0) {
+			SelectObject(hDC, hFont);
+			textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
+			(*rect).top += textHeight + 5;
+			printString = L"";
+			//h1에 대한 DrawParagraph
+			index += DrawParagraph(hDC, rect, h1Font, &tags[index], 1);
+		}
+		else if (wcscmp(tags[index].GetTagName().c_str(), L"img") == 0) {
+			textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
+			(*rect).top += textHeight + 1;
+			printString = L"";
+			//img tag
+			imgTag = ImgTag();
+			imgTag.ParseAttribute(tags[index].GetAttribute());
+			img = new Image(imgTag.GetSrc().c_str(), FALSE);
 
-	default:
-		// <body>
-		while (true) {
-
-			if (wcscmp(tags[index].GetTagName().c_str(), L"p") == 0) {
-				SelectObject(hDC, hFont);
-				textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-				(*rect).top += textHeight + 5;
-				printString = L"";
-				//p에 대한 DrawParagraph
-				index += DrawParagraph(hDC, rect, hFont, &(tags[index]), 0);
-			}
-			else if (wcscmp(tags[index].GetTagName().c_str(), L"h1") == 0) {
-				textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-				(*rect).top += textHeight + 5;
-				printString = L"";
-				//h1에 대한 DrawParagraph
-				index += DrawParagraph(hDC, rect, hFont, &tags[index], 1);
-			}
-			else if (wcscmp(tags[index].GetTagName().c_str(), L"img") == 0) {
-				textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-				(*rect).top += textHeight + 1;
-				printString = L"";
-				//img tag
-				index += DrawParagraph(hDC, rect, hFont, &tags[index], 10);
-			}
-			else if (wcscmp(tags[index].GetTagName().c_str(), L"/body") == 0) {
-				break;
-			}
-			else if (wcscmp(tags[index].GetTagName().c_str(), L"/html") == 0) {
-				break;
-			}
-			printString.append(tags[index].GetParagraph());
+			imageRect = Rect((*rect).left, (*rect).top, (*img).GetWidth(), (*img).GetHeight());
+			graphics.DrawImage(img, imageRect);
+			(*rect).top += (*img).GetHeight() + 1;
+			delete img;
 			index++;
+			break;
 		}
-		SelectObject(hDC, hFont);
-		textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-		(*rect).top += textHeight + 5;
+		else if (wcscmp(tags[index].GetTagName().c_str(), L"/p") == 0) {
+			break;
+		}
+		else if (wcscmp(tags[index].GetTagName().c_str(), L"/h1") == 0) {
+			break;
+		}
+		else if (wcscmp(tags[index].GetTagName().c_str(), L"/body") == 0) {
+			break;
+		}
+		else if (wcscmp(tags[index].GetTagName().c_str(), L"/html") == 0) {
+			break;
+		}
+		printString.append(tags[index].GetParagraph());
+		index++;
 	}
+	SelectObject(hDC, hFont);
+	textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
+	(*rect).top += textHeight + 5;
 	
 	return index;
 }
