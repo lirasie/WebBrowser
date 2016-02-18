@@ -97,8 +97,13 @@ int HtmlParser::splitTag(wstring* body) {
 		}
 		tmp = tmp.substr(pos1End + 1);
 		tags[i].SetParagraph(tmp.substr(0, tmp.find(L"<")).c_str());
+
+		if((wcscmp(tags[i].GetTagName().c_str(), L"/a") == 0) || (wcscmp(tags[i].GetTagName().c_str(), L"a") == 0))
+			wprintf(L"tag name: %ls\t", tags[i].GetTagName().c_str());
 		i++;
 	}
+	
+
 
 	return count;
 }
@@ -122,12 +127,7 @@ int HtmlParser::classifyTag() {
 			tags[i] = iTag;
 			iCount++;
 		}
-		else if (wcscmp(tags[i].GetTagName().c_str(), L"br") == 0 || wcscmp(tags[i].GetTagName().c_str(), L"br/") == 0) {
-			wstring wstr(L"\n");
-			wstr.append(tags[i].GetParagraph().c_str());
-			tags[i].SetParagraph(wstr.c_str());
-		}
-		printf("pause");
+		//printf("pause");
 	}
 	imageCnt = iCount;
 	return bodyIndex;

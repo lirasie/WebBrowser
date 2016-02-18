@@ -142,7 +142,7 @@ int WebSocket::SendAndRecv(string request) {
 		return -1;
 	}
 
-	printf("Bytes Sent: %ld\n", iResult);
+	//printf("Bytes Sent: %ld\n", iResult);
 
 	// shutdown the connection for sending since no more data will be sent
 	// the client can still use the ConnectSocket for receiving data
@@ -168,10 +168,10 @@ int WebSocket::SendAndRecv(string request) {
 				receiveData[i] = recvbuf[i - tmp];
 			}
 
-			printf("received byte: %d\n", iResult);
+			//printf("received byte: %d\n", iResult);
 		}
 		else if (iResult == 0)
-			printf("Connection closed\n");
+			printf("Connection closed");
 		else
 			printf("recv failed: %d\n", WSAGetLastError());
 	} while (iResult > 0);
