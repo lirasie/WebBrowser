@@ -217,12 +217,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 				si_y.nPage = (*baseRect).bottom - (*baseRect).top;
 				
 				SetScrollInfo(hWnd_parent, SB_VERT, &si_y, TRUE);
+				
 				SetScrollPos(hWnd_parent, SB_VERT, 0, TRUE);
 				SetScrollPos(hWnd_parent, SB_HORZ, 0, TRUE);
 
 			}
 		}
-		
 
 		EndPaint(hWnd, &ps);
 		return 0;
@@ -230,20 +230,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 		si_x.cbSize = sizeof(si_x);
 		si_x.fMask = SIF_ALL;
 
-		GetScrollInfo(hWnd, SB_VERT, &si_x);
+		GetScrollInfo(hWnd, SB_HORZ, &si_x);
 		xPos = si_x.nPos;
 
 		switch (LOWORD(wParam)) {
-		case SB_LINEUP:
+		case SB_LEFT:
 			si_x.nPos -= 1;
 			break;
-		case SB_LINEDOWN:
+		case SB_RIGHT:
 			si_x.nPos += 1;
 			break;
-		case SB_PAGEUP:
+		case SB_PAGELEFT:
 			si_x.nPos -= si_x.nPage;
 			break;
-		case SB_PAGEDOWN:
+		case SB_PAGERIGHT:
 			si_x.nPos += si_x.nPage;
 			break;
 		case SB_THUMBTRACK:
@@ -253,11 +253,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		si_x.fMask = SIF_POS;
-		SetScrollInfo(hWnd, SB_VERT, &si_x, TRUE);
-		GetScrollInfo(hWnd, SB_VERT, &si_x);
+		SetScrollInfo(hWnd, SB_HORZ, &si_x, TRUE);
+		GetScrollInfo(hWnd, SB_HORZ, &si_x);
 
 		if (si_x.nPos != xPos) {
-			ScrollWindow(hWnd, 0, xPos - si_x.nPos, &windowRect, &windowRect);
+			ScrollWindow(hWnd, xPos - si_x.nPos, 0, &windowRect, &windowRect);
 			xPos = si_x.nPos;
 			UpdateWindow(hWnd);
 		}
@@ -341,9 +341,7 @@ int DrawHtml(HDC hDC, RECT* baseRect) {
 	i = DrawParagraph(hDC, htmlRect, baseFont, tags, -1);
 	printf("%d", i);
 
-	//if(yMax < (*htmlRect).bottom)
 	yMax = (*htmlRect).bottom;
-	//if(xMax < (*htmlRect).left + maximumLen)
 	xMax = (*htmlRect).left + maximumLen;
 		
 	return 0;
@@ -440,7 +438,10 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			(*rect).right = (*rect).left + x;
 			(*rect).bottom = (*rect).top + y;
 			textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-			
+
+			(*rect).top += textHeight + 1;
+			(*rect).bottom += textHeight + 1;
+
 			if (x > maximumLen)
 				maximumLen = x;
 
@@ -458,8 +459,9 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			(*rect).right = (*rect).left + x;
 			(*rect).bottom = (*rect).top + y;
 			textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-			(*rect).top += textHeight + 5;
-			(*rect).bottom += textHeight + 5;
+			
+			(*rect).top += textHeight + 1;
+			(*rect).bottom += textHeight + 1;
 			if (x > maximumLen)
 				maximumLen = x;
 
@@ -519,8 +521,8 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 	(*rect).right = (*rect).left + x;
 	(*rect).bottom = (*rect).top + y;
 	textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
-	(*rect).top += textHeight + 5;
-	(*rect).bottom += textHeight + 5;
+	(*rect).top += textHeight + 1;
+	(*rect).bottom += textHeight + 1;
 	if (x > maximumLen)
 		maximumLen = x;
 	
