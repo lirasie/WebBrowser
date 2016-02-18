@@ -64,14 +64,16 @@ public:
 	float GetHeight();
 	float GetWidth();
 };
-/*
+
 class ATag :public Tag {
 private:
 	wstring href;
-
+	RECT* aTagRect;
 public:
 	ATag();
-};*/
+	int ParseAttribute(wstring tagInfo);
+	RECT* getATagRect();
+};
 
 class WebSocket {
 private:
