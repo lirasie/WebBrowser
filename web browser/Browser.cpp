@@ -364,7 +364,7 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 	wstring printString(L"");
 	int index = 0;
 	Graphics graphics(hDC);
-	ImgTag imgTag;
+	ImgTag* imgTag;
 	Rect imageRect;
 	Image* img;
 	int textHeight = 0;
@@ -459,16 +459,46 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			textHeight = DrawString(printString, rect);
 			
 			printString = L"";
+			wstring fileName;
 			//img tag
-			imgTag = ImgTag();
-			imgTag.ParseAttribute(tags[index].GetAttribute());
-			img = new Image(imgTag.GetSrc().c_str(), FALSE);
+			//imgTag = ImgTag();
+			//imgTag = (ImgTag)tags[index];
+			//imgTag.ParseAttribute(tags[index].GetAttribute());
+			//img = new Image(imgTag.GetSrc().c_str(), FALSE);
+			//img = new Image((*(ImgTag*)(&tags[index])).GetSrc().c_str(), FALSE);
+			unsigned int pos1 = tags[index].GetAttribute().find(L"src");
+			if (pos1 != wstring().npos) {
+				wstring wstr = tags[index].GetAttribute().substr(pos1);
+				int pos2 = wstr.find(L"\"");
+				int pos3 = wstr.find(L"\'");
+				if (pos2 != wstring().npos) {
+					wstr = wstr.substr(pos2 + 1);
+					pos3 = wstr.find(L"\"");
+					wstr = wstr.substr(0, pos3);
+					fileName = wstr;
+				}
+				else if (pos3 != wstring().npos) {
+					wstr = wstr.substr(pos3 + 1);
+					pos2 = wstr.find(L"\'");
+					wstr = wstr.substr(0, pos2);
+					fileName = wstr;
+				}
+			}
 
-			imageRect = Rect((*rect).left, (*rect).top, (*img).GetWidth(), (*img).GetHeight());
-			graphics.DrawImage(img, imageRect);
+			if ( (pos1 = fileName.find_last_of('/')) != wstring().npos) {
+				fileName = fileName.substr(pos1 + 1);
+			}		
+			
+			img = new Image(fileName.c_str(), FALSE);
+
 			if ((*img).GetHeight() > 0) {
+				imageRect = Rect((*rect).left, (*rect).top, (*img).GetWidth(), (*img).GetHeight());
+				graphics.DrawImage(img, imageRect);
 				(*rect).top += (*img).GetHeight() + 1;
+				(*rect).right = (*rect).right + (*img).GetWidth();
 				(*rect).left = windowRect.left - xPos;
+				if ((*rect).right - (*rect).left > maximumLen)
+					maximumLen = (*rect).right;
 			}
 			
 			delete img;
@@ -523,7 +553,7 @@ int DrawString(wstring printString, RECT* rect) {
 	textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT );
 	if (x > maximumLen)
 		maximumLen = x;
-	(*rect).left = (*rect).right;
+	(*rect).left = (*rect).right + 1;
 
 	delete textStringSize;
 

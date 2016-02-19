@@ -9,11 +9,15 @@ int WebSocket::MakeSocket(wstring wstr) {
 			printf("socket error");
 			return -1;
 		}
-		request = "GET " + uri + " HTTP/1.1\r\n\r\n";
+		request = "GET " + uri + " HTTP/1.1\r\n";
+		request = request + "Host: " + host + "\r\n";
+		request = request + "\r\n";
+
 		return SendAndRecv(request);
 	}
 	return -1;
 }
+
 
 bool WebSocket::urlParse(wstring wstr) {
 

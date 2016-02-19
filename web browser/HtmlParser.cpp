@@ -14,8 +14,8 @@ int HtmlParser::doParse(wstring messageBody) {
 	
 	tagCount = splitTag(html);
 	bodyIndex = classifyTag();
-	FindImage();
-	
+	//FindImage();
+	FindImageTag();
 	return 0;
 }
 
@@ -104,8 +104,6 @@ int HtmlParser::splitTag(wstring* body) {
 			
 		i++;
 	}
-	
-
 
 	return count;
 }
@@ -180,9 +178,39 @@ int HtmlParser::FindImage() {
 			imageCnt--;
 			i--;
 		}
+		else {
+			
+		}
 	}
 
 
 	return 0;
 }
 
+int HtmlParser::FindImageTag() {
+	int index;
+	FileParser* imageFile;
+	ImgTag* img;
+
+	for (index = 0; index < tagCount; index++) {
+		if (wcscmp(tags[index].GetTagName().c_str(), L"img") == 0) {
+			imageFile = new FileParser();
+			img = new ImgTag;
+			(*img).SetParagraph(tags[index].GetParagraph().c_str());
+			(*img).ParseAttribute(tags[index].GetAttribute().c_str());
+
+			int check = (*imageFile).doImageParse((*img).GetAttribute(), wSocket);
+			if ((*imageFile).FileDownload(check) < 0) {
+				imageCnt--;
+			}
+			else {
+				(*img).SetSrc((*imageFile).fileName);
+				//delete tags[index];
+				tags[index] = *img;
+			}
+		}
+	}
+
+	return 0;
+
+}

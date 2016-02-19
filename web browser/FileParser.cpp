@@ -32,7 +32,6 @@ int FileParser::doImageParse(wstring imageTag, WebSocket* wSocket) {
 	else return 0;
 }
 
-
 int FileParser::FileDownload(int check) {
 	string str;
 	WebSocket ws;
@@ -46,6 +45,7 @@ int FileParser::FileDownload(int check) {
 		fileName = src.substr(src.find_last_of('/') + 1);
 		break;
 	case 1:
+		
 		ws.MakeSocket(src);
 		str = ws.uri;
 		src = wstring(str.length(), ' ');
@@ -54,6 +54,7 @@ int FileParser::FileDownload(int check) {
 
 		break;
 	case 0:
+		
 		//host와 port 정보를 html을 받았던 소켓에서 불러온다
 		str = "";
 		str.append((*pageSocket).host);
@@ -71,6 +72,7 @@ int FileParser::FileDownload(int check) {
 		//파일의 src 정보를 추가해준 후 소켓을 만든다
 		
 		wstr.append(targetURI + src);
+		
 		ws.MakeSocket(wstr);
 		fileName = src;
 		break;

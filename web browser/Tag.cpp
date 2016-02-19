@@ -37,10 +37,11 @@ ImgTag::ImgTag() {
 }
 
 int ImgTag::ParseAttribute(wstring tagInfo) {
-	unsigned int pos1 = tagInfo.find(L"img");
-	SetAttribute(tagInfo.substr(pos1 + 4).c_str());
+	unsigned int pos1;
+	//pos1 = tagInfo.find(L"img");
+	//SetAttribute(tagInfo.substr(pos1 + 4).c_str());
 
-	//height
+	SetAttribute(tagInfo.c_str());
 	pos1 = tagInfo.find(L"height");
 	if (pos1 != wstring().npos) {
 		wstring wstr = tagInfo.substr(pos1);
@@ -105,6 +106,10 @@ int ImgTag::ParseAttribute(wstring tagInfo) {
 
 wstring ImgTag::GetSrc() {
 	return src;
+}
+int ImgTag::SetSrc(wstring wstr) {
+	src = wstr;
+	return 0;
 }
 
 float ImgTag::GetHeight() {

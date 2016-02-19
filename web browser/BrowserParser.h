@@ -63,6 +63,7 @@ public:
 	wstring GetSrc();
 	float GetHeight();
 	float GetWidth();
+	int SetSrc(wstring wstr);
 };
 
 class ATag :public Tag {
@@ -86,6 +87,7 @@ public:
 	string port;
 	string uri;
 	string request;
+	
 	SOCKET ConnectSocket;
 	
 	string recvData;
@@ -99,7 +101,6 @@ public:
 	int MakeSocket(wstring wstr);
 	int InitializeSocket(const char* server, const char* host);
 	int SendAndRecv(string request);
-
 };
 
 class ResponseParser {
@@ -157,13 +158,10 @@ public:
 	HtmlParser(wstring messageBody, WebSocket* wSocket);
 	int doParse(wstring messageBody);
 	int splitTag(wstring* html);
-	
+	int FindImageTag();
 	const WCHAR* getTitle();
 	const WCHAR* getHtml();
-	const WCHAR* getBody();
 	Tag* getBodyTags();
-	wstring getImageTag(int index);
-	int getImageCnt();
 	int FindImage();
 };
 
