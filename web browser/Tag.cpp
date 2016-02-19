@@ -50,13 +50,11 @@ int ImgTag::ParseAttribute(wstring tagInfo) {
 			wstr = wstr.substr(pos2 + 1);
 			pos3 = wstr.find(L"\"");
 			wstr = wstr.substr(0, pos3);
-			//height = stof(wstr);
 		}
 		else if(pos3 != wstring().npos){
 			wstr = wstr.substr(pos3 + 1);
 			pos2 = wstr.find(L"\'");
 			wstr = wstr.substr(0, pos2);
-			//height = stof(wstr);
 		}
 		height = wstr;
 	}
@@ -71,13 +69,11 @@ int ImgTag::ParseAttribute(wstring tagInfo) {
 			wstr = wstr.substr(pos2 + 1);
 			pos3 = wstr.find(L"\"");
 			wstr = wstr.substr(0, pos3);
-			//width = stof(wstr);
 		}
 		else if (pos3 != wstring().npos) {
 			wstr = wstr.substr(pos3 + 1);
 			pos2 = wstr.find(L"\'");
 			wstr = wstr.substr(0, pos2);
-			//width = stof(wstr);
 		}
 		width = wstr;
 	}
@@ -143,13 +139,11 @@ int ATag::ParseAttribute(wstring tagInfo) {
 			wstr = wstr.substr(pos2 + 1);
 			pos3 = wstr.find(L"\"");
 			wstr = wstr.substr(0, pos3);
-			//height = stof(wstr);
 		}
 		else if (pos3 != wstring().npos) {
 			wstr = wstr.substr(pos3 + 1);
 			pos2 = wstr.find(L"\'");
 			wstr = wstr.substr(0, pos2);
-			//height = stof(wstr);
 		}
 		href = wstr;
 	}

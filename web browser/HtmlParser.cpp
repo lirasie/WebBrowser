@@ -98,8 +98,10 @@ int HtmlParser::splitTag(wstring* body) {
 		tmp = tmp.substr(pos1End + 1);
 		tags[i].SetParagraph(tmp.substr(0, tmp.find(L"<")).c_str());
 
-		if((wcscmp(tags[i].GetTagName().c_str(), L"/a") == 0) || (wcscmp(tags[i].GetTagName().c_str(), L"a") == 0))
+		if ((wcscmp(tags[i].GetTagName().c_str(), L"/p") == 0) || (wcscmp(tags[i].GetTagName().c_str(), L"p") == 0)) {
 			wprintf(L"tag name: %ls\t", tags[i].GetTagName().c_str());
+		}
+			
 		i++;
 	}
 	
@@ -127,7 +129,6 @@ int HtmlParser::classifyTag() {
 			tags[i] = iTag;
 			iCount++;
 		}
-		//printf("pause");
 	}
 	imageCnt = iCount;
 	return bodyIndex;

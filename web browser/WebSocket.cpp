@@ -171,7 +171,8 @@ int WebSocket::SendAndRecv(string request) {
 			//printf("received byte: %d\n", iResult);
 		}
 		else if (iResult == 0)
-			printf("Connection closed");
+			//printf("Connection closed");
+			printf("");
 		else
 			printf("recv failed: %d\n", WSAGetLastError());
 	} while (iResult > 0);

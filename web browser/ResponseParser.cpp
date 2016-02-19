@@ -93,36 +93,7 @@ int ResponseParser::doParse(wstring response) {
 		}
 		break;
 	}
-/*
-	while (((pos1 = tmp.find(L"\r\n")) != -1) || (pos2 = tmp.find(L"\n")) != -1) {		
-		//header lines를 header temp에 몰아서 저장
-		
-		wstring str = tmp.substr(0, pos + 2);
-		if (str.compare(L"\r\n") == 0) {
-			messageBody = tmp.substr(pos + 2);
-			break;
-		}
-		else {
-			headerTmp.append(str);
-			headerCnt++;
-			tmp = tmp.substr(pos + 2);
-		}
-	}
 
-	//header line들을 배열로 변환, headers에 할당
-	if (headerCnt > 0) {
-		headers = new wstring[headerCnt];
-		tmp = headerTmp;
-		for (int i = 0; i < headerCnt; i++) {
-			pos = tmp.find(L"\r\n");
-			headers[i] = tmp.substr(0, pos);
-			tmp = tmp.substr(pos + 2);
-		}
-	}
-	else {
-		headers = new wstring[1];
-		headers[0] = L"";
-	}*/
 	return 0;
 }
 

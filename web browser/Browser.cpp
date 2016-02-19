@@ -83,14 +83,13 @@ LRESULT CALLBACK EditProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam
 		if (wParam == VK_RETURN) {
 
 			WCHAR str_edit[128];
-
+			
 			GetWindowText(hEdit, str_edit, 128);
 			wstring wstr = wstring(str_edit);
 			xPos = 0;
 			yPos = 0;
 			xMax = 0;
 			yMax = 0;
-
 
 			if (response != NULL) {		//response가 비어있지 않다면 비워준다
 				delete response;
@@ -353,8 +352,10 @@ int DrawImage(HDC hDC, RECT* baseRect) {
 	FileParser* iParse = (*content).file;
 
 	Image img((*iParse).getFileName().c_str(), FALSE);
-	Rect imageRect((*baseRect).left, (*baseRect).top, img.GetWidth(), img.GetHeight());
+	Rect imageRect((*baseRect).left - xPos, (*baseRect).top - yPos, img.GetWidth(), img.GetHeight());
 	graphics.DrawImage(&img, imageRect);
+	yMax = img.GetHeight();
+	xMax = img.GetWidth();
 
 	return 0;
 }
@@ -372,8 +373,12 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 
 	// <body>
 	while (true) {
+		if (wcscmp(tags[index].GetTagName().c_str(), L"") == 0) {
+			break;
+		}
+
 		if (wcscmp(tags[index].GetTagName().c_str(), L"script") == 0) {
-			while (wcscmp(tags[++index].GetTagName().c_str(), L"/script") == 1);
+			while (wcscmp(tags[++index].GetTagName().c_str(), L"/script") == 0);
 			printf("goobye script...\n");
 			//continue;
 		}
@@ -385,9 +390,13 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			//font 지정
 			SelectObject(hDC, (*hFont));
 			//p를 만나기 전까지 받았던 string 출력
-			DrawString(printString, rect);
+			textHeight = DrawString(printString, rect);
+			if (textHeight > 1)
+				(*rect).top += textHeight;
+			else
+				(*rect).top += DEFAULT_FONT_SIZE;
 			(*rect).top += 5;
-			(*rect).bottom += 5;
+			(*rect).left = windowRect.left - xPos;
 
 			printString = L"";
 			//p에 대한 DrawParagraph
@@ -399,9 +408,14 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			//font 지정
 			SelectObject(hDC, (*hFont));
 			//h1을 만나기 전까지 받았던 string 출력
-			DrawString(printString, rect);
+			textHeight = DrawString(printString, rect);
+
+			if (textHeight > 1)
+				(*rect).top += textHeight;
+			else
+				(*rect).top += DEFAULT_FONT_SIZE;
 			(*rect).top += 5;
-			(*rect).bottom += 5;
+			(*rect).left = windowRect.left - xPos;
 
 			printString = L"";
 			//h1에 대한 DrawParagraph
@@ -415,18 +429,11 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			SelectObject(hDC, (*hFont));
 				
 			//a를 만나기 전까지 받았던 string 출력
-			DrawString(printString, rect);
+			textHeight = DrawString(printString, rect);
 			
 			printString = L"";
 			hyperlinks++;
 			SetTextColor(hDC, RGB(0, 0, 255));
-			//HFONT* hyperLinkFont = new HFONT();
-			//(*hyperLinkFont) = (HFONT)SendMessage(hWnd_parent, WM_GETFONT, 0, 0);
-			//HFONT basicFont = (HFONT)GetCurrentObject(hDC, OBJ_FONT);
-		/*	baseFont = new HFONT(CreateFont(DEFAULT_FONT_SIZE, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-				DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, NULL));
-				*/
-
 
 			hyperLinkFlag = 1;
 		}
@@ -435,20 +442,22 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			//출력하고, 높이 기록
 			//루프 안으로 돌아오기는 한다
 			SelectObject(hDC, (*hFont));
-			DrawString(printString, rect);
-			
+			textHeight = DrawString(printString, rect);
+			(*rect).left = windowRect.left - xPos;
+
+			if (textHeight > 1)
+				(*rect).top += textHeight;
+			else
+				(*rect).top += DEFAULT_FONT_SIZE;
+
 			printString = L"";
 			
 		}
-		
 		else if (wcscmp(tags[index].GetTagName().c_str(), L"img") == 0) {
 			//img 태그를 만났을 때
 			SelectObject(hDC, (*hFont));
-			DrawString(printString, rect);
+			textHeight = DrawString(printString, rect);
 			
-			(*rect).top += textHeight + 1;
-			(*rect).bottom += textHeight + 1;
-
 			printString = L"";
 			//img tag
 			imgTag = ImgTag();
@@ -457,11 +466,14 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 
 			imageRect = Rect((*rect).left, (*rect).top, (*img).GetWidth(), (*img).GetHeight());
 			graphics.DrawImage(img, imageRect);
-			(*rect).top += (*img).GetHeight() + 1;
+			if ((*img).GetHeight() > 0) {
+				(*rect).top += (*img).GetHeight() + 1;
+				(*rect).left = windowRect.left - xPos;
+			}
+			
 			delete img;
 			index++;
 		}
-		
 		else if (wcscmp(tags[index].GetTagName().c_str(), L"/p") == 0) {
 			break;
 		}
@@ -473,13 +485,12 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			
 			SelectObject(hDC, (*hFont));
 			///a를 만나기 전까지 받았던 string 출력
-			DrawString(printString, rect);
+			textHeight = DrawString(printString, rect);
 
 			SetTextColor(hDC, baseColor);
 			printString = L"";
 			
 			hyperLinkFlag = 0;
-
 		}
 		else if (wcscmp(tags[index].GetTagName().c_str(), L"/body") == 0) {
 			break;
@@ -490,8 +501,13 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 		
 	}
 	SelectObject(hDC, (*hFont));
-	DrawString(printString, rect);
-	
+	textHeight = DrawString(printString, rect);
+	(*rect).left = windowRect.left - xPos;
+
+	if (textHeight > 1)
+		(*rect).top += textHeight;
+	else
+		(*rect).top += DEFAULT_FONT_SIZE;
 	return index;
 }
 
@@ -504,12 +520,10 @@ int DrawString(wstring printString, RECT* rect) {
 	y = (*textStringSize).cy;
 	(*rect).right = (*rect).left + x;
 	(*rect).bottom = (*rect).top + y;
-	textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT | DT_WORDBREAK);
+	textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT );
 	if (x > maximumLen)
 		maximumLen = x;
-
-	(*rect).top += textHeight;
-	(*rect).bottom += textHeight;
+	(*rect).left = (*rect).right;
 
 	delete textStringSize;
 
