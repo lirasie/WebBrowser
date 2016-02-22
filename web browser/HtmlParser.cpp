@@ -1,5 +1,4 @@
 #include "BrowserParser.h"
-#include <regex>
 
 HtmlParser::HtmlParser(wstring messageBody, WebSocket* ws) {
 	wSocket = ws;

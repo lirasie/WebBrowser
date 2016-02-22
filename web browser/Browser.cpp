@@ -7,6 +7,8 @@ int DrawHtml(HDC hdc, RECT* baseRect);
 int DrawImage(HDC hDC, RECT* baseRect);
 int DrawParagraph(HDC hDC, RECT* baseRect, HFONT* hFont, Tag* tags, int tagType);
 int DrawString(wstring printString, RECT* rect);
+int SetHyperlinkStyle(HDC hDC, HFONT* hFont);
+int DelHyperlinkStyle(HDC hDC, HFONT* hFont);
 
 HINSTANCE g_hInst;
 LPCTSTR lpszClass = TEXT("KM's browser");
@@ -34,6 +36,7 @@ HDC hDC;
 COLORREF baseColor;
 HFONT* baseFont;
 HFONT* h1Font;
+vector<ATag> ATagList;
 
 int APIENTRY WinMain(HINSTANCE hinstance, HINSTANCE hPrevInstance, LPSTR lpszCmdParam, int nCmdShow)
 {
@@ -328,6 +331,7 @@ int DrawHtml(HDC hDC, RECT* baseRect) {
 	h1Font = new HFONT(CreateFont(DEFAULT_FONT_SIZE * 2, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
 		DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, NULL));
 
+
 	if (wcscmp(title.c_str(), L"no title tag") != 0) {
 		SetWindowText(hWnd_parent, (*hParse).getTitle());
 	}
@@ -364,10 +368,13 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 	wstring printString(L"");
 	int index = 0;
 	Graphics graphics(hDC);
-	ImgTag* imgTag;
+	ImgTag imgTag;
+	ATag aTag;
 	Rect imageRect;
 	Image* img;
 	int textHeight = 0;
+	
+	LOGFONT lf = { 0, };
 
 	SelectObject(hDC, (*hFont));
 
@@ -376,14 +383,20 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 		if (wcscmp(tags[index].GetTagName().c_str(), L"") == 0) {
 			break;
 		}
-
 		if (wcscmp(tags[index].GetTagName().c_str(), L"script") == 0) {
 			while (wcscmp(tags[++index].GetTagName().c_str(), L"/script") == 0);
 			printf("goobye script...\n");
 			//continue;
 		}
+		if (wcscmp(tags[index].GetTagName().c_str(), L"noscript") == 0) {
+			while (wcscmp(tags[++index].GetTagName().c_str(), L"/noscript") == 0);
+			printf("goobye script...\n");
+			//continue;
+		}
+		
 		printString.append(tags[index].GetParagraph());
 		index++;
+
 		if (wcscmp(tags[index].GetTagName().c_str(), L"p") == 0) {
 			//p tag를 만났을 때
 			
@@ -392,9 +405,9 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			//p를 만나기 전까지 받았던 string 출력
 			textHeight = DrawString(printString, rect);
 			if (textHeight > 1)
-				(*rect).top += textHeight;
+				(*rect).top = (*rect).bottom;
 			else
-				(*rect).top += DEFAULT_FONT_SIZE;
+				(*rect).top += DEFAULT_FONT_SIZE + 1;
 			(*rect).top += 5;
 			(*rect).left = windowRect.left - xPos;
 
@@ -409,11 +422,13 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			SelectObject(hDC, (*hFont));
 			//h1을 만나기 전까지 받았던 string 출력
 			textHeight = DrawString(printString, rect);
+			aTag = ATag();
+
 
 			if (textHeight > 1)
-				(*rect).top += textHeight;
+				(*rect).top = (*rect).bottom;
 			else
-				(*rect).top += DEFAULT_FONT_SIZE;
+				(*rect).top += DEFAULT_FONT_SIZE + 1;
 			(*rect).top += 5;
 			(*rect).left = windowRect.left - xPos;
 
@@ -433,8 +448,8 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			
 			printString = L"";
 			hyperlinks++;
-			SetTextColor(hDC, RGB(0, 0, 255));
-
+			//if(hyperLinkFlag == 0)
+			//	SetHyperlinkStyle(hDC, hFont);
 			hyperLinkFlag = 1;
 		}
 		else if ((wcscmp(tags[index].GetTagName().c_str(), L"br") == 0) || (wcscmp(tags[index].GetTagName().c_str(), L"/br") == 0)){
@@ -446,9 +461,9 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			(*rect).left = windowRect.left - xPos;
 
 			if (textHeight > 1)
-				(*rect).top += textHeight;
+				(*rect).top = (*rect).bottom;
 			else
-				(*rect).top += DEFAULT_FONT_SIZE;
+				(*rect).top += DEFAULT_FONT_SIZE + 1;
 
 			printString = L"";
 			
@@ -457,48 +472,35 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			//img 태그를 만났을 때
 			SelectObject(hDC, (*hFont));
 			textHeight = DrawString(printString, rect);
-			
+			unsigned int pos1;
 			printString = L"";
 			wstring fileName;
-			//img tag
-			//imgTag = ImgTag();
-			//imgTag = (ImgTag)tags[index];
-			//imgTag.ParseAttribute(tags[index].GetAttribute());
-			//img = new Image(imgTag.GetSrc().c_str(), FALSE);
-			//img = new Image((*(ImgTag*)(&tags[index])).GetSrc().c_str(), FALSE);
-			unsigned int pos1 = tags[index].GetAttribute().find(L"src");
-			if (pos1 != wstring().npos) {
-				wstring wstr = tags[index].GetAttribute().substr(pos1);
-				int pos2 = wstr.find(L"\"");
-				int pos3 = wstr.find(L"\'");
-				if (pos2 != wstring().npos) {
-					wstr = wstr.substr(pos2 + 1);
-					pos3 = wstr.find(L"\"");
-					wstr = wstr.substr(0, pos3);
-					fileName = wstr;
-				}
-				else if (pos3 != wstring().npos) {
-					wstr = wstr.substr(pos3 + 1);
-					pos2 = wstr.find(L"\'");
-					wstr = wstr.substr(0, pos2);
-					fileName = wstr;
-				}
+			imgTag = ImgTag();
+			imgTag.ParseAttribute(tags[index].GetAttribute());
+			fileName = imgTag.GetSrc();
+
+			if ((pos1 = fileName.find_last_of('/')) != wstring().npos) {
+				fileName = fileName.substr(pos1 + 1);
 			}
 
-			if ( (pos1 = fileName.find_last_of('/')) != wstring().npos) {
-				fileName = fileName.substr(pos1 + 1);
-			}		
-			
 			img = new Image(fileName.c_str(), FALSE);
+			int imgHeight = (imgTag.GetHeight() > 0 ? imgTag.GetHeight() : (*img).GetHeight());
+			int imgWidth = (imgTag.GetWidth() > 0 ? imgTag.GetWidth() : (*img).GetWidth());
 
-			if ((*img).GetHeight() > 0) {
-				imageRect = Rect((*rect).left, (*rect).top, (*img).GetWidth(), (*img).GetHeight());
+			if ( imgHeight > 0) {
+				imageRect = Rect((*rect).left , (*rect).top , imgWidth, imgHeight);
 				graphics.DrawImage(img, imageRect);
-				(*rect).top += (*img).GetHeight() + 1;
-				(*rect).right = (*rect).right + (*img).GetWidth();
+				(*rect).right = (*rect).right + imgWidth;
 				(*rect).left = windowRect.left - xPos;
 				if ((*rect).right - (*rect).left > maximumLen)
 					maximumLen = (*rect).right;
+
+				if (imgHeight < DEFAULT_FONT_SIZE) {
+					(*rect).top += DEFAULT_FONT_SIZE + 1;
+				}
+				else {
+					(*rect).top += imgHeight + 1;
+				}
 			}
 			
 			delete img;
@@ -516,16 +518,12 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			SelectObject(hDC, (*hFont));
 			///a를 만나기 전까지 받았던 string 출력
 			textHeight = DrawString(printString, rect);
-
-			SetTextColor(hDC, baseColor);
-			printString = L"";
+			//if (hyperLinkFlag > 0)
+			//	DelHyperlinkStyle(hDC, hFont);
 			
 			hyperLinkFlag = 0;
 		}
 		else if (wcscmp(tags[index].GetTagName().c_str(), L"/body") == 0) {
-			break;
-		}
-		else if (wcscmp(tags[index].GetTagName().c_str(), L"/html") == 0) {
 			break;
 		}
 		
@@ -535,9 +533,9 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 	(*rect).left = windowRect.left - xPos;
 
 	if (textHeight > 1)
-		(*rect).top += textHeight;
+		(*rect).top = (*rect).bottom;
 	else
-		(*rect).top += DEFAULT_FONT_SIZE;
+		(*rect).top += DEFAULT_FONT_SIZE+1;
 	return index;
 }
 
@@ -549,7 +547,7 @@ int DrawString(wstring printString, RECT* rect) {
 	x = (*textStringSize).cx;
 	y = (*textStringSize).cy;
 	(*rect).right = (*rect).left + x;
-	(*rect).bottom = (*rect).top + y;
+	(*rect).bottom = (*rect).top + y+1;
 	textHeight = DrawText(hDC, printString.c_str(), -1, rect, DT_LEFT );
 	if (x > maximumLen)
 		maximumLen = x;
@@ -558,4 +556,28 @@ int DrawString(wstring printString, RECT* rect) {
 	delete textStringSize;
 
 	return textHeight;
+}
+
+//무언가 과부하가 걸리는 것 같아서 보류
+int SetHyperlinkStyle(HDC hDC, HFONT* hFont) {
+	LOGFONT lf = { 0, };
+	HFONT ulfont;
+	SetTextColor(hDC, RGB(0, 0, 255));
+	GetObject((*hFont), sizeof(LOGFONT), &lf);
+	lf.lfUnderline = TRUE;
+	//delete hFont;
+	*hFont = HFONT(CreateFontIndirect(&lf));
+	return 0;
+}
+
+int DelHyperlinkStyle(HDC hDC, HFONT* hFont) {
+	LOGFONT lf = { 0, };
+
+	SetTextColor(hDC, baseColor);
+	GetObject((*hFont), sizeof(LOGFONT), &lf);
+	lf.lfUnderline = FALSE;
+	//delete hFont;
+	*hFont = HFONT(CreateFontIndirect(&lf));
+
+	return 0;
 }

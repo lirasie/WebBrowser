@@ -10,6 +10,8 @@
 #include <ObjIdl.h>
 #include <gdiplus.h>
 #include <iostream>
+#include <vector>
+#include <regex>
 
 #pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
 
@@ -52,10 +54,8 @@ public:
 class ImgTag :public Tag {
 private:
 	wstring alt;
-	//float height;
-	//float width;
-	wstring height;
-	wstring width;
+	float height;
+	float width;
 	wstring src;
 public:
 	ImgTag();
@@ -74,6 +74,7 @@ public:
 	ATag();
 	int ParseAttribute(wstring tagInfo);
 	RECT* getATagRect();
+	int setATagRect(RECT* rect);
 };
 
 class WebSocket {
