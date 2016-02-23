@@ -5,7 +5,7 @@ LRESULT CALLBACK EditProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK StaticProc(HWND, UINT, WPARAM, LPARAM);
 int DrawHtml(HDC hdc, RECT* baseRect);
 int DrawImage(HDC hDC, RECT* baseRect);
-int DrawParagraph(HDC hDC, RECT* baseRect, HFONT* hFont, Tag* tags, int tagType);
+int DrawParagraph(HDC hDC, RECT* baseRect, HFONT* hFont, Tag* tags, int tagType, wstring wstr);
 int DrawString(wstring printString, RECT* rect);
 int SetHyperlinkStyle(HDC hDC, HFONT* hFont);
 int DelHyperlinkStyle(HDC hDC, HFONT* hFont);
@@ -342,7 +342,7 @@ int DrawHtml(HDC hDC, RECT* baseRect) {
 	
 	SelectObject(hDC, baseFont);
 	baseColor = GetTextColor(hDC);
-	i = DrawParagraph(hDC, htmlRect, baseFont, tags, -1);
+	i = DrawParagraph(hDC, htmlRect, baseFont, tags, -1, L"");
 	printf("%d", i);
 
 	yMax = (*htmlRect).bottom;
@@ -364,8 +364,8 @@ int DrawImage(HDC hDC, RECT* baseRect) {
 	return 0;
 }
 
-int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
-	wstring printString(L"");
+int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType, wstring printString) {
+	//wstring printString;
 	int index = 0;
 	Graphics graphics(hDC);
 	ImgTag imgTag;
@@ -393,10 +393,8 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			printf("goobye script...\n");
 			//continue;
 		}
-		
 		printString.append(tags[index].GetParagraph());
 		index++;
-
 		if (wcscmp(tags[index].GetTagName().c_str(), L"p") == 0) {
 			//p tag를 만났을 때
 			
@@ -413,7 +411,7 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 
 			printString = L"";
 			//p에 대한 DrawParagraph
-			index += DrawParagraph(hDC, rect, hFont, &(tags[index]), 0);
+			index += DrawParagraph(hDC, rect, hFont, &(tags[index]), 0, printString);
 		}
 		else if (wcscmp(tags[index].GetTagName().c_str(), L"h1") == 0) {
 			//h1 태그를 만났을 때
@@ -434,7 +432,7 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 
 			printString = L"";
 			//h1에 대한 DrawParagraph
-			index += DrawParagraph(hDC, rect, h1Font, &tags[index], 0);
+			index += DrawParagraph(hDC, rect, h1Font, &tags[index], 0, printString);
 		}
 		
 		else if (wcscmp(tags[index].GetTagName().c_str(), L"a") == 0) {
@@ -448,8 +446,8 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			
 			printString = L"";
 			hyperlinks++;
-			//if(hyperLinkFlag == 0)
-			//	SetHyperlinkStyle(hDC, hFont);
+			if(hyperLinkFlag == 0)
+				SetHyperlinkStyle(hDC, hFont);
 			hyperLinkFlag = 1;
 		}
 		else if ((wcscmp(tags[index].GetTagName().c_str(), L"br") == 0) || (wcscmp(tags[index].GetTagName().c_str(), L"/br") == 0)){
@@ -504,7 +502,6 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			}
 			
 			delete img;
-			index++;
 		}
 		else if (wcscmp(tags[index].GetTagName().c_str(), L"/p") == 0) {
 			break;
@@ -518,15 +515,14 @@ int DrawParagraph(HDC hDC, RECT* rect, HFONT* hFont, Tag* tags, int tagType) {
 			SelectObject(hDC, (*hFont));
 			///a를 만나기 전까지 받았던 string 출력
 			textHeight = DrawString(printString, rect);
-			//if (hyperLinkFlag > 0)
-			//	DelHyperlinkStyle(hDC, hFont);
-			
+			if (hyperLinkFlag > 0)
+				DelHyperlinkStyle(hDC, hFont);
+			printString = L"";
 			hyperLinkFlag = 0;
 		}
 		else if (wcscmp(tags[index].GetTagName().c_str(), L"/body") == 0) {
 			break;
 		}
-		
 	}
 	SelectObject(hDC, (*hFont));
 	textHeight = DrawString(printString, rect);
@@ -563,10 +559,10 @@ int SetHyperlinkStyle(HDC hDC, HFONT* hFont) {
 	LOGFONT lf = { 0, };
 	HFONT ulfont;
 	SetTextColor(hDC, RGB(0, 0, 255));
-	GetObject((*hFont), sizeof(LOGFONT), &lf);
-	lf.lfUnderline = TRUE;
+	//GetObject((*hFont), sizeof(LOGFONT), &lf);
+	//lf.lfUnderline = TRUE;
 	//delete hFont;
-	*hFont = HFONT(CreateFontIndirect(&lf));
+	//*hFont = HFONT(CreateFontIndirect(&lf));
 	return 0;
 }
 
@@ -574,10 +570,10 @@ int DelHyperlinkStyle(HDC hDC, HFONT* hFont) {
 	LOGFONT lf = { 0, };
 
 	SetTextColor(hDC, baseColor);
-	GetObject((*hFont), sizeof(LOGFONT), &lf);
-	lf.lfUnderline = FALSE;
+	//GetObject((*hFont), sizeof(LOGFONT), &lf);
+	//lf.lfUnderline = FALSE;
 	//delete hFont;
-	*hFont = HFONT(CreateFontIndirect(&lf));
+	//*hFont = HFONT(CreateFontIndirect(&lf));
 
 	return 0;
 }

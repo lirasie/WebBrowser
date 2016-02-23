@@ -39,7 +39,7 @@ ImgTag::ImgTag() {
 int ImgTag::ParseAttribute(wstring tagInfo) {
 	unsigned int pos1;
 	wstring wstr;
-	wregex numregex(L"[0-9\.]+");
+	wregex numregex(L"[0-9]+");
 
 	//pos1 = tagInfo.find(L"img");
 	//SetAttribute(tagInfo.substr(pos1 + 4).c_str());
